@@ -1,21 +1,29 @@
 "use client";
 
-import { ChangeEvent, FormEvent, KeyboardEvent } from "react";
+import { useState, FormEvent, KeyboardEvent, ChangeEvent } from "react";
 import { Send } from "lucide-react";
 
 interface MessageInputProps {
-  input: string;
-  handleInputChange: (e: ChangeEvent<HTMLTextAreaElement>) => void;
-  handleSubmit: (e: FormEvent<HTMLFormElement>) => void;
+  sendMessage: (message: { text: string }) => void;
   isLoading: boolean;
 }
 
 export function MessageInput({
-  input,
-  handleInputChange,
-  handleSubmit,
+  sendMessage,
   isLoading,
 }: MessageInputProps) {
+  const [input, setInput] = useState("");
+
+  const handleInputChange = (e: ChangeEvent<HTMLTextAreaElement>) => {
+    setInput(e.target.value);
+  };
+
+  const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (!input.trim()) return;
+    sendMessage({ text: input });
+    setInput("");
+  };
   const handleKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();

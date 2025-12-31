@@ -1,7 +1,7 @@
 import { test, expect, vi, afterEach } from "vitest";
 import { render, screen, cleanup } from "@testing-library/react";
 import { MessageList } from "../MessageList";
-import type { Message } from "ai";
+import type { UIMessage as Message } from "ai";
 
 // Mock the MarkdownRenderer component
 vi.mock("../MarkdownRenderer", () => ({
@@ -28,8 +28,8 @@ test("MessageList renders user messages", () => {
     {
       id: "1",
       role: "user",
-      content: "Create a button component",
-    },
+      parts: [{ type: "text", text: "Create a button component" }],
+    } as any,
   ];
 
   render(<MessageList messages={messages} />);
@@ -42,8 +42,8 @@ test("MessageList renders assistant messages", () => {
     {
       id: "1",
       role: "assistant",
-      content: "I'll help you create a button component.",
-    },
+      parts: [{ type: "text", text: "I'll help you create a button component." }],
+    } as any,
   ];
 
   render(<MessageList messages={messages} />);
@@ -58,21 +58,18 @@ test("MessageList renders messages with parts", () => {
     {
       id: "1",
       role: "assistant",
-      content: "",
       parts: [
         { type: "text", text: "Creating your component..." },
         {
           type: "tool-invocation",
-          toolInvocation: {
-            toolCallId: "asdf",
-            args: { command: "create", path: "/App.jsx" },
-            toolName: "str_replace_editor",
-            state: "result",
-            result: "File created: /App.jsx",
-          },
-        },
+          toolCallId: "asdf",
+          input: { command: "create", path: "/App.jsx" },
+          toolName: "str_replace_editor",
+          state: "result",
+          output: "File created: /App.jsx",
+        } as any,
       ],
-    },
+    } as any,
   ];
 
   render(<MessageList messages={messages} />);
@@ -88,8 +85,8 @@ test("MessageList shows content for assistant message with content", () => {
     {
       id: "1",
       role: "assistant",
-      content: "Generating your component...",
-    },
+      parts: [{ type: "text", text: "Generating your component..." }],
+    } as any,
   ];
 
   render(<MessageList messages={messages} isLoading={true} />);
@@ -104,8 +101,8 @@ test("MessageList shows loading state for last assistant message without content
     {
       id: "1",
       role: "assistant",
-      content: "",
-    },
+      parts: [],
+    } as any,
   ];
 
   render(<MessageList messages={messages} isLoading={true} />);
@@ -118,13 +115,13 @@ test("MessageList doesn't show loading state for non-last messages", () => {
     {
       id: "1",
       role: "assistant",
-      content: "First response",
-    },
+      parts: [{ type: "text", text: "First response" }],
+    } as any,
     {
       id: "2",
       role: "user",
-      content: "Another request",
-    },
+      parts: [{ type: "text", text: "Another request" }],
+    } as any,
   ];
 
   render(<MessageList messages={messages} isLoading={true} />);
@@ -138,16 +135,15 @@ test("MessageList renders reasoning parts", () => {
     {
       id: "1",
       role: "assistant",
-      content: "",
       parts: [
         { type: "text", text: "Let me analyze this." },
         {
           type: "reasoning",
-          reasoning: "The user wants a button component with specific styling.",
+          text: "The user wants a button component with specific styling.",
           details: [],
-        },
+        } as any,
       ],
-    },
+    } as any,
   ];
 
   render(<MessageList messages={messages} />);
@@ -163,23 +159,23 @@ test("MessageList renders multiple messages in correct order", () => {
     {
       id: "1",
       role: "user",
-      content: "First user message",
-    },
+      parts: [{ type: "text", text: "First user message" }],
+    } as any,
     {
       id: "2",
       role: "assistant",
-      content: "First assistant response",
-    },
+      parts: [{ type: "text", text: "First assistant response" }],
+    } as any,
     {
       id: "3",
       role: "user",
-      content: "Second user message",
-    },
+      parts: [{ type: "text", text: "Second user message" }],
+    } as any,
     {
       id: "4",
       role: "assistant",
-      content: "Second assistant response",
-    },
+      parts: [{ type: "text", text: "Second assistant response" }],
+    } as any,
   ];
 
   const { container } = render(<MessageList messages={messages} />);
@@ -206,13 +202,12 @@ test("MessageList handles step-start parts", () => {
     {
       id: "1",
       role: "assistant",
-      content: "",
       parts: [
         { type: "text", text: "Step 1 content" },
-        { type: "step-start" },
+        { type: "step-start" } as any,
         { type: "text", text: "Step 2 content" },
       ],
-    },
+    } as any,
   ];
 
   render(<MessageList messages={messages} />);
@@ -229,13 +224,13 @@ test("MessageList applies correct styling for user vs assistant messages", () =>
     {
       id: "1",
       role: "user",
-      content: "User message",
-    },
+      parts: [{ type: "text", text: "User message" }],
+    } as any,
     {
       id: "2",
       role: "assistant",
-      content: "Assistant message",
-    },
+      parts: [{ type: "text", text: "Assistant message" }],
+    } as any,
   ];
 
   render(<MessageList messages={messages} />);
@@ -259,9 +254,8 @@ test("MessageList handles empty content with parts", () => {
     {
       id: "1",
       role: "assistant",
-      content: "", // Empty content but has parts
       parts: [{ type: "text", text: "This is from parts" }],
-    },
+    } as any,
   ];
 
   render(<MessageList messages={messages} />);
@@ -274,9 +268,8 @@ test("MessageList shows loading for assistant message with empty parts", () => {
     {
       id: "1",
       role: "assistant",
-      content: "",
       parts: [],
-    },
+    } as any,
   ];
 
   const { container } = render(
@@ -296,20 +289,17 @@ test("ToolInvocationDisplay shows update operation", () => {
     {
       id: "1",
       role: "assistant",
-      content: "",
       parts: [
         {
           type: "tool-invocation",
-          toolInvocation: {
-            toolCallId: "update1",
-            args: { command: "str_replace", path: "/components/Button.tsx" },
-            toolName: "str_replace_editor",
-            state: "result",
-            result: "Replaced 2 occurrence(s) of the string in /components/Button.tsx",
-          },
-        },
+          toolCallId: "update1",
+          input: { command: "str_replace", path: "/components/Button.tsx" },
+          toolName: "str_replace_editor",
+          state: "result",
+          output: "Replaced 2 occurrence(s) of the string in /components/Button.tsx",
+        } as any,
       ],
-    },
+    } as any,
   ];
 
   render(<MessageList messages={messages} />);
@@ -324,20 +314,17 @@ test("ToolInvocationDisplay shows error state", () => {
     {
       id: "1",
       role: "assistant",
-      content: "",
       parts: [
         {
           type: "tool-invocation",
-          toolInvocation: {
-            toolCallId: "error1",
-            args: { command: "create", path: "/App.jsx" },
-            toolName: "str_replace_editor",
-            state: "result",
-            result: "Error: File already exists: /App.jsx",
-          },
-        },
+          toolCallId: "error1",
+          input: { command: "create", path: "/App.jsx" },
+          toolName: "str_replace_editor",
+          state: "result",
+          output: "Error: File already exists: /App.jsx",
+        } as any,
       ],
-    },
+    } as any,
   ];
 
   render(<MessageList messages={messages} />);
@@ -352,19 +339,16 @@ test("ToolInvocationDisplay shows pending state", () => {
     {
       id: "1",
       role: "assistant",
-      content: "",
       parts: [
         {
           type: "tool-invocation",
-          toolInvocation: {
-            toolCallId: "pending1",
-            args: { command: "create", path: "/NewFile.jsx" },
-            toolName: "str_replace_editor",
-            state: "call",
-          },
-        },
+          toolCallId: "pending1",
+          input: { command: "create", path: "/NewFile.jsx" },
+          toolName: "str_replace_editor",
+          state: "call",
+        } as any,
       ],
-    },
+    } as any,
   ];
 
   render(<MessageList messages={messages} />);
@@ -377,20 +361,17 @@ test("ToolInvocationDisplay shows rename operation", () => {
     {
       id: "1",
       role: "assistant",
-      content: "",
       parts: [
         {
           type: "tool-invocation",
-          toolInvocation: {
-            toolCallId: "rename1",
-            args: { command: "rename", path: "/old.jsx", new_path: "/new.jsx" },
-            toolName: "file_manager",
-            state: "result",
-            result: { success: true, message: "Successfully renamed /old.jsx to /new.jsx" },
-          },
-        },
+          toolCallId: "rename1",
+          input: { command: "rename", path: "/old.jsx", new_path: "/new.jsx" },
+          toolName: "file_manager",
+          state: "result",
+          output: { success: true, message: "Successfully renamed /old.jsx to /new.jsx" },
+        } as any,
       ],
-    },
+    } as any,
   ];
 
   render(<MessageList messages={messages} />);
@@ -405,20 +386,17 @@ test("ToolInvocationDisplay shows delete operation", () => {
     {
       id: "1",
       role: "assistant",
-      content: "",
       parts: [
         {
           type: "tool-invocation",
-          toolInvocation: {
-            toolCallId: "delete1",
-            args: { command: "delete", path: "/unused.jsx" },
-            toolName: "file_manager",
-            state: "result",
-            result: { success: true, message: "Successfully deleted /unused.jsx" },
-          },
-        },
+          toolCallId: "delete1",
+          input: { command: "delete", path: "/unused.jsx" },
+          toolName: "file_manager",
+          state: "result",
+          output: { success: true, message: "Successfully deleted /unused.jsx" },
+        } as any,
       ],
-    },
+    } as any,
   ];
 
   render(<MessageList messages={messages} />);

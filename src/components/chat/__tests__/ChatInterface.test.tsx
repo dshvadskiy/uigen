@@ -28,15 +28,9 @@ vi.mock("../MessageList", () => ({
 }));
 
 vi.mock("../MessageInput", () => ({
-  MessageInput: ({ input, handleInputChange, handleSubmit, isLoading }: any) => (
+  MessageInput: ({ sendMessage, isLoading }: any) => (
     <div data-testid="message-input">
-      <input
-        value={input}
-        onChange={handleInputChange}
-        data-testid="input"
-        disabled={isLoading}
-      />
-      <button onClick={handleSubmit} disabled={isLoading} data-testid="submit">
+      <button onClick={() => sendMessage({ text: "test" })} disabled={isLoading} data-testid="submit">
         Submit
       </button>
     </div>
@@ -45,9 +39,7 @@ vi.mock("../MessageInput", () => ({
 
 const mockUseChat = {
   messages: [],
-  input: "",
-  handleInputChange: vi.fn(),
-  handleSubmit: vi.fn(),
+  sendMessage: vi.fn(),
   status: "idle" as const,
 };
 
@@ -89,15 +81,13 @@ test("passes correct props to MessageList", () => {
 test("passes correct props to MessageInput", () => {
   (useChat as any).mockReturnValue({
     ...mockUseChat,
-    input: "Test input",
     status: "submitted",
   });
 
   render(<ChatInterface />);
 
-  const input = screen.getByTestId("input");
-  expect(input).toHaveProperty("value", "Test input");
-  expect(input).toHaveProperty("disabled", true);
+  const submitButton = screen.getByTestId("submit");
+  expect(submitButton).toHaveProperty("disabled", true);
 });
 
 test("isLoading is true when status is submitted", () => {
@@ -161,6 +151,11 @@ test("scrolls when messages change", () => {
 });
 
 test("renders with correct layout classes", () => {
+  (useChat as any).mockReturnValue({
+    ...mockUseChat,
+    messages: [{ id: "1", role: "user", parts: [{ type: "text", text: "Hello" }] }],
+  });
+
   const { container } = render(<ChatInterface />);
 
   const mainDiv = container.firstChild as HTMLElement;

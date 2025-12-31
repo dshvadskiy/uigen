@@ -1,6 +1,6 @@
 "use client";
 
-import { Message } from "ai";
+import { UIMessage as Message } from "ai";
 import { cn } from "@/lib/utils";
 import { User, Bot, Loader2 } from "lucide-react";
 import { MarkdownRenderer } from "./MarkdownRenderer";
@@ -28,9 +28,9 @@ export function MessageList({ messages, isLoading }: MessageListProps) {
   return (
     <div className="flex flex-col h-full overflow-y-auto px-4 py-6">
       <div className="space-y-6 max-w-4xl mx-auto w-full">
-        {messages.map((message) => (
+        {messages.map((message, index) => (
           <div
-            key={message.id || message.content}
+            key={message.id || `message-${index}`}
             className={cn(
               "flex gap-4",
               message.role === "user" ? "justify-end" : "justify-start"
@@ -73,24 +73,24 @@ export function MessageList({ messages, isLoading }: MessageListProps) {
                             return (
                               <div key={partIndex} className="mt-3 p-3 bg-white/50 rounded-md border border-neutral-200">
                                 <span className="text-xs font-medium text-neutral-600 block mb-1">Reasoning</span>
-                                <span className="text-sm text-neutral-700">{part.reasoning}</span>
+                                <span className="text-sm text-neutral-700">{part.text}</span>
                               </div>
                             );
                           case "tool-invocation":
-                            const tool = part.toolInvocation;
                             return (
                               <ToolInvocationDisplay
                                 key={partIndex}
-                                toolName={tool.toolName}
-                                args={tool.args}
-                                state={tool.state}
-                                result={tool.result}
+                                toolName={(part as any).toolName}
+                                args={(part as any).input}
+                                state={(part as any).state}
+                                result={(part as any).output}
                               />
                             );
-                          case "source":
+                          case "source-url":
+                          case "source-document":
                             return (
                               <div key={partIndex} className="mt-2 text-xs text-neutral-500">
-                                Source: {JSON.stringify(part.source)}
+                                Source: {JSON.stringify(part)}
                               </div>
                             );
                           case "step-start":
@@ -101,26 +101,14 @@ export function MessageList({ messages, isLoading }: MessageListProps) {
                       })}
                       {isLoading &&
                         message.role === "assistant" &&
-                        messages.indexOf(message) === messages.length - 1 && (
+                        messages.indexOf(message) === messages.length - 1 &&
+                        message.parts.length === 0 && (
                           <div className="flex items-center gap-2 mt-3 text-neutral-500">
                             <Loader2 className="h-3 w-3 animate-spin" />
                             <span className="text-sm">Generating...</span>
                           </div>
                         )}
                     </>
-                  ) : message.content ? (
-                    message.role === "user" ? (
-                      <span className="whitespace-pre-wrap">{message.content}</span>
-                    ) : (
-                      <MarkdownRenderer content={message.content} className="prose-sm" />
-                    )
-                  ) : isLoading &&
-                    message.role === "assistant" &&
-                    messages.indexOf(message) === messages.length - 1 ? (
-                    <div className="flex items-center gap-2 text-neutral-500">
-                      <Loader2 className="h-3 w-3 animate-spin" />
-                      <span className="text-sm">Generating...</span>
-                    </div>
                   ) : null}
                 </div>
               </div>
